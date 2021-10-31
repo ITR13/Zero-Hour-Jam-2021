@@ -27,7 +27,7 @@ public class MoveCamera : MonoBehaviour
 
         _camera.orthographicSize = Mathf.Max(
             5,
-            _camera.orthographicSize + Input.mouseScrollDelta.y
+            _camera.orthographicSize - Input.mouseScrollDelta.y
         );
     }
 }
