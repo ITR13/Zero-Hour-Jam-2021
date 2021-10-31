@@ -15,12 +15,14 @@ public class MoveCamera : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space)) transform.position = new Vector3(0, 0, transform.position.z);
 
+        /*
         var mousePos = Input.mousePosition;
         if (mousePos.x < 50) transform.Translate(-Time.deltaTime * CameraSpeed, 0, 0);
         if (mousePos.y < 50) transform.Translate(0, -Time.deltaTime * CameraSpeed, 0);
 
         if (mousePos.x >= Screen.width - 50) transform.Translate(Time.deltaTime * CameraSpeed, 0, 0);
         if (mousePos.y >= Screen.height - 50) transform.Translate(0, Time.deltaTime * CameraSpeed, 0);
+        */
 
 
         if (Input.GetKeyDown(KeyCode.R)) SceneManager.LoadScene(0);

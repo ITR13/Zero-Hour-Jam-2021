@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class BoxMaster : MonoBehaviour
 {
@@ -13,18 +14,18 @@ public class BoxMaster : MonoBehaviour
 
     private readonly string[] _levels = new[]
     {
-        "1:0;0:-1;-1:0;0:2;1:1;-1:1", // tutorial
-        "0:-1;1:1;-1:1;0:3;-1:3;1:3;2:3;3:2;3:1;3:0;2:-1;1:-1;-2:3;-3:2;-3:1;-2:-1;-3:0;-1:-1", // tutorial 2
-        "0:-1;-1:0;-2:1;0:5;1:5;-3:2;-4:3;-3:5;-4:4;-1:6;-2:6;2:6;3:6;4:5;2:0;1:-1;3:1;4:2;5:3;5:4", // heart
+        "0:2;1:0;0:-2;-1:0;1:1;1:-1;-1:1;-1:-1", // Tutorial 1
+        "-1:2;0:2;1:0;0:0;1:3;2:2;0:-1;-1:3;1:2;-2:2;-1:0", // Heart
     };
 
     private Dictionary<Vector2Int, BoxScript> _boxes = new Dictionary<Vector2Int, BoxScript>();
 
     private HashSet<Vector2Int> target;
+    private bool stopped;
+    private float t;
 
     private void Awake()
     {
-        SpawnBox(Vector2Int.zero);
         if (_currentLevel >= _levels.Length)
         {
             _currentLevel = 0;
@@ -33,6 +34,7 @@ public class BoxMaster : MonoBehaviour
         }
 
         SpawnLevel(_levels[_currentLevel]);
+        SpawnBox(Vector2Int.zero);
     }
 
     private void SpawnLevel(string level)
@@ -61,25 +63,45 @@ public class BoxMaster : MonoBehaviour
 
     private void Clicked(Vector2Int pos)
     {
-        _boxes[pos].gameObject.SetActive(false);
+        if (stopped) return;
+        Destroy(_boxes[pos].gameObject);
+        _boxes.Remove(pos);
 
         foreach (var delta in new[] { Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left })
         {
             var newPos = pos + delta;
-            if (_boxes.ContainsKey(newPos)) continue;
-            SpawnBox(newPos);
+
+            if (_boxes.ContainsKey(newPos))
+            {
+                Destroy(_boxes[newPos].gameObject);
+                _boxes.Remove(newPos);
+            }
+            else
+            {
+                SpawnBox(newPos);
+            }
         }
 
         if (target.SetEquals(_boxes.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key)))
         {
-
+            _currentLevel++;
+            stopped = true;
+            t = 1;
         }
     }
 
     private void Update()
     {
+        if (t > 0)
+        {
+            t -= Time.deltaTime;
+            if (t > 0) return;
+            SceneManager.LoadScene(0);
+            return;
+        }
+
         if (!Input.GetKeyDown(KeyCode.P)) return;
-        var keys = string.Join(";", .Select(pair => $"{pair.Key.x}:{pair.Key.y}"));
+        var keys = string.Join(";", _boxes.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => $"{pair.Key.x}:{pair.Key.y}"));
         Debug.Log(keys);
     }
 }
