@@ -5,8 +5,11 @@ using UnityEngine;
 public class BoxMaster : MonoBehaviour
 {
     [SerializeField] private BoxScript _boxPrefab;
+    [SerializeField] private Transform _targetPrefab;
 
-    private static int CurrentLevel;
+    [SerializeField] private GameObject _victoryScreen;
+
+    private static int _currentLevel;
 
     private readonly string[] _levels = new[]
     {
@@ -16,9 +19,35 @@ public class BoxMaster : MonoBehaviour
     };
 
     private Dictionary<Vector2Int, BoxScript> _boxes = new Dictionary<Vector2Int, BoxScript>();
+
+    private HashSet<Vector2Int> target;
+
     private void Awake()
     {
         SpawnBox(Vector2Int.zero);
+        if (_currentLevel >= _levels.Length)
+        {
+            _currentLevel = 0;
+            _victoryScreen.SetActive(true);
+            return;
+        }
+
+        SpawnLevel(_levels[_currentLevel]);
+    }
+
+    private void SpawnLevel(string level)
+    {
+        target = new HashSet<Vector2Int>();
+        var positions = level.Split(";");
+        foreach (var pos in positions)
+        {
+            var posSplit = pos.Split(":");
+            var x = int.Parse(posSplit[0]);
+            var y = int.Parse(posSplit[1]);
+
+            Instantiate(_targetPrefab, new Vector3(x, y, -1), Quaternion.identity);
+            target.Add(new Vector2Int(x, y));
+        }
     }
 
     private void SpawnBox(Vector2Int position)
@@ -40,12 +69,17 @@ public class BoxMaster : MonoBehaviour
             if (_boxes.ContainsKey(newPos)) continue;
             SpawnBox(newPos);
         }
+
+        if (target.SetEquals(_boxes.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key)))
+        {
+
+        }
     }
 
     private void Update()
     {
         if (!Input.GetKeyDown(KeyCode.P)) return;
-        var keys = string.Join(";", _boxes.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => $"{pair.Key.x}:{pair.Key.y}"));
+        var keys = string.Join(";", .Select(pair => $"{pair.Key.x}:{pair.Key.y}"));
         Debug.Log(keys);
     }
 }
